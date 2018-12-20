@@ -35,6 +35,17 @@ function gameArea(){
                 }
             }
         }
+    },
+
+    this.reset = function(){
+        for(i = 0; i < this.rowColumns.length; i++){
+            var row = this.rowColumns[i];
+                for(j = 0; j < row.length; j++){
+                    var cell = row[j];
+                   cell.clicked = false;
+                   cell.draw();
+                }
+            }
     }
 
 
@@ -52,28 +63,35 @@ function cell(x, y, width, height){
     this.height = height,
     this.clicked = false,
 
+    this.color = '#999966',
+    this.owner = undefined,
+
     this.draw = function(){
-        console.log("i get drawn!");
         var canvas = document.getElementById("myCanvas");
         var ctx = canvas.getContext("2d");
         ctx.clearRect(this.x, this.y, this.width, this.height); 
         //ctx.fillStyle = '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6); //Random color
 
-        if(this.clicked){
-            ctx.fillStyle = '#FF0000';   
-        }else{
-        ctx.fillStyle = '#999966';
+        if(this.owner != undefined){
+            this.color = this.owner.color;
         }
+        ctx.fillStyle = this.color;
+        
         ctx.fillRect(this.x, this.y, this.width, this.height);
         
         ctx.strokeStyle = "black";
         ctx.strokeRect(this.x, this.y, this.width, this.height);
 
     },
+
+    this.setOwner = function(owner){
+        this.owner = owner;
+    },
+
     //isClicked returns true if the click coordinates are inside the area of the cell
     this.isClicked = function(x,y) {
         if(
-            x >= this.x &&
+            x >= this.x && 
             x <= this.x + this.width &&
             y >= this.y &&
             y <= this.y + this.height){
@@ -82,6 +100,11 @@ function cell(x, y, width, height){
 
         return false;
         }
+}
+
+//if restart is used, all cells are reset
+function restart(){
+    myGameArea.reset();
 }
 
 //createRowColumns returns an array of rows containing row arrays which contain cells.
@@ -106,27 +129,45 @@ function createRowColumns(rows, columns){
     return rowColumns;
 }
 
-//creates the mouse listener
-window.addEventListener('mousedown', function (e) {
-    
-    var x = e.pageX;
-    var y = e.pageY;
-    
-    //FindClicked
-   var clickedCell = myGameArea.findClicked(x,y);
+var player1 = {
+    color: '#FF0000'
+}
+
+var player2 = {
+    color: '#0000FF'
+}
+
+//rightclick
+canvas.addEventListener('contextmenu', 
+function(e) {
+    e.preventDefault();
+    var x = e.clientX;
+    var y = e.clientY;
+    var clickedCell = myGameArea.findClicked(x,y);
+
+    if(clickedCell != undefined){
+        console.log(clickedCell);
+        clickedCell.setOwner(player2);
+        clickedCell.clicked = true;
+        clickedCell.draw();
+    }else{
+        console.log("player2 did not click on a cell");
+    }
+}, false);
+
+canvas.addEventListener('click',function(e){
+    var x = e.clientX;
+    var y = e.clientY;
+
+    console.log("player1 clicked! (%s|%s)",x,y);
+    var clickedCell = myGameArea.findClicked(x,y);
 
    if(clickedCell != undefined){
        console.log(clickedCell)
+       clickedCell.setOwner(player1);
        clickedCell.clicked = true;
        clickedCell.draw();
    }else{
-       console.log("player did not click on a cell");
+       console.log("player1 did not click on a cell");
    }
-
-   // console.log("mousedown! (%s|%s)",x,y);
-})
-  window.addEventListener('mouseup', function (e) {
-
-   // this.console.log("mouseup!")
-
-})
+}, false)
